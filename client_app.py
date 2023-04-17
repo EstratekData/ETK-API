@@ -1,5 +1,7 @@
 import requests
 
+
+
 # Define the base URL for the API server
 base_url = "http://localhost:5000"
 
