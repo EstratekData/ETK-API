@@ -1,4 +1,3 @@
-import openpyxl
 import pandas as pd
 import datetime
 import os
@@ -90,6 +89,26 @@ class etk_finance:
         # Extract the ticker and name from each line, and add the exchange
         the_tickers = [[t.split(",")[0], t.split(",")[1], the_exchange] for t in the_tickers[1:]] # Skip the first line (column headers)
         return the_tickers
+
+    def get_last_stock_price(self, ticker, exchange):
+        numberBars = 1
+        tv = TvDatafeed(self.username, self.password)
+        print('Symbol list...')
+
+        df = tv.get_hist(
+            ticker,
+            exchange,
+            interval=Interval.in_daily,
+            n_bars=numberBars,
+            extended_session=False,
+        )
+        
+        print(df[0])
+        return float(df[0])
+
+  
+        price = 0
+        return price
 
     # Recorre la lista de tickers buscando la data para cada ticker
     def get_stock_data(self, the_tickers_df, the_exchange, stopiter = 0):
