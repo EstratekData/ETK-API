@@ -1,4 +1,3 @@
-
 import datetime
 import enum
 import json
@@ -7,7 +6,7 @@ import random
 import re
 import string
 import pandas as pd
-from websocket import create_connection
+from websockets import create_connection
 import requests
 import json
 

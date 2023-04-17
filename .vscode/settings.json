@@ -3,6 +3,6 @@
         "./etk_date",
         "./etk_time",
         "./etk_finance",
-
+        "./tvDatafeed",
     ]
 }
