@@ -22,7 +22,7 @@ def date():
 @etk_apiserver.route('/time')
 def time():
     print('API Server>> La hora local es: ')
-    return get_time()
+    return time1.get_time()
 
 @etk_apiserver.route('/etk_finance')
 def etk_get_tickers():
