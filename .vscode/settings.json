@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./etk_time",
+        "./etk_finance",
+        "./etk_date"
+    ]
+}
