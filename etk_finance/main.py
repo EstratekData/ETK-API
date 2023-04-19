@@ -1,4 +1,4 @@
-import etk_stock
+from etk_stock import etk_finance
 import pandas as pd
 
 
@@ -10,7 +10,29 @@ import pandas as pd
   
 nreqs_to_trading_view = 0
 STOP_COUNT = 10
-myData = etk_stock.etk_finance('output_plus.xlsx') 
+myData = etk_finance('output_plus.xlsx', username='oariasz72', password='Megatrends1') 
+
+
+my_stock = 'AAPL'
+my_exchange = 'NASDAQ'
+
+print('GET CURRENT STOCK PRICE {my_stock} / {my_exchange}')
+df_prices = myData.get_current_stock_price(my_stock, my_exchange)
+if df_prices is not None:
+    print('Resultados')
+    print(df_prices)
+    
+print('GET DAILY STOCK PRICE OF Apr-2023 {my_stock} / {my_exchange}')
+df_prices = myData.get_stock_data_daily_interval(my_stock, my_exchange, '2023-04-01', '2023-04-19')
+if df_prices is not None:
+    print('Resultados Abril')
+    print(df_prices)    
+    
+print('THE END')
+# print('The last price for {my_stock} at the exchange {my_exchange} is: ${my_price}')
+quit() 
+
+
 
 # 1. Get the ticker lists from the URLs
 nyse_tickers_list = myData.get_tickers('NYSE')
@@ -27,8 +49,8 @@ nasdaq_tickers_df = pd.DataFrame(nasdaq_tickers_list, columns=['Ticker', 'Ticker
 # NO SABEMOS SI ES NECESARIO HACER ESTO AUN
 # TODO: Chequear código
 total_tickers_df = pd.DataFrame([], columns=['Ticker', 'Ticker Name', 'Exchange'])
-total_tickers_df = total_tickers_df.append(nyse_tickers_df, ignore_index=True)
-total_tickers_df = total_tickers_df.append(nasdaq_tickers_df, ignore_index=True)
+total_tickers_df = pd.concat([total_tickers_df, nyse_tickers_df])
+total_tickers_df = pd.concat([total_tickers_df, nasdaq_tickers_df])
 
 # 2. Extractor para todos los ticker posibles
 

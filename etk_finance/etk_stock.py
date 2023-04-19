@@ -2,9 +2,11 @@ import pandas as pd
 import datetime
 import os
 from tvDatafeed import TvDatafeed, Interval
-
+import openpyxl
 import requests
 import numpy as np
+import logging
+from datetime import datetime
 
 
 
@@ -39,12 +41,15 @@ import numpy as np
 
 class etk_finance:
 
-    def __init__(self, file_name, base_dir=None):
+    def __init__(self, file_name, base_dir=None, username = '', password = ''):
         self.file_name = file_name
         self.base_dir = base_dir
+        print(base_dir)
+        self.logger = logging.getLogger(__name__)
+        
         column_headers = [ 'datetime' , 'symbol',  'open', 'high', 'low', 'close', 'volume']
-        self.username = 'oariasz'   # self.get_env_var('ETK_FINANCE_USER')
-        self.password = 'Megatrends1'            # self.get_env_var('ETK_FINANCE_PASSWORD')
+        self.username = username   # self.get_env_var('ETK_FINANCE_USER')
+        self.password = password            # self.get_env_var('ETK_FINANCE_PASSWORD')
                     
         if base_dir:
             self.file_path = os.path.join(base_dir, file_name)
@@ -60,7 +65,16 @@ class etk_finance:
             # Genera una tabla vacia en Excel con las columnas column_headers
             df.to_excel(self.file_path, index=False, sheet_name='DB', header=True, startrow=0)            
         # self.writer = pd.ExcelWriter(self.file_path, engine='xlsxwriter')
+        
+        
+    # Calculates the days between a start_date and an end_date, both of them in a string format 'YYYY-MM-AA'
+    def days_between(self, start_date, end_date):
+        start = datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.strptime(end_date, '%Y-%m-%d')
+        delta = end - start
+        return delta.days
 
+    # Obtiene el valor de una variable de ambiente (OS) especificada
     def get_env_var(variable_name):
         value = os.environ.get(variable_name)
         if not value:
@@ -90,28 +104,52 @@ class etk_finance:
         the_tickers = [[t.split(",")[0], t.split(",")[1], the_exchange] for t in the_tickers[1:]] # Skip the first line (column headers)
         return the_tickers
 
-    def get_last_stock_price(self, ticker, exchange):
-        numberBars = 1
+
+    def get_stock_data(self, ticker, exchange, interval, n_bars):
+        print()
         tv = TvDatafeed(self.username, self.password)
-        print('Symbol list...')
-
-        df = tv.get_hist(
-            ticker,
-            exchange,
-            interval=Interval.in_daily,
-            n_bars=numberBars,
-            extended_session=False,
-        )
+        print(f'get_stock_data({self.username} --- {self.password})...')
         
-        print(df[0])
-        return float(df[0])
+        # get the current price of the stock
+        try:
+            df = tv.get_hist(symbol=ticker, exchange=exchange, interval=interval, n_bars = n_bars, extended_session=False)
+        except Exception as e:
+            self.logger.error(e)
+            return None
+        return df
 
-  
-        price = 0
-        return price
+    # Retorna un dataframe con toda la infomraación del ticker y el exchange 
+    # INFO: (symbol, open, close, high, low, volume)
+    def get_current_stock_price(self, ticker, exchange):
+        print(f'get_current_stock_price({self.username} --- {self.password})...')
+        # get the current price of the stock
+        try:
+            df = self.get_stock_data(ticker, exchange=exchange, interval=Interval.in_daily, n_bars = 1)
+        except Exception as e:
+            self.logger.error(e)
+            return None
+        return df
+    
+    # Retorna un dataframe con toda la infomraación del ticker y el exchange entre dos fechas
+    # INFO: (symbol, open, close, high, low, volume)
+    # FORMATOS DE start_date y end_date: 'YYYY-MM-DD'
+    def get_stock_data_daily_interval(self, ticker, exchange, start_date, end_date ):
+        nbars = self.days_between(start_date, end_date)
+        tv = TvDatafeed(self.username, self.password)
+        print(f'get_stock_data({self.username} --- {self.password})...')
+        # start_date = pd.Timestamp('2023-01-01')
+        # end_date = pd.Timestamp('2023-04-19')
+        
+        # get the current price of the stock
+        try:
+            df = self.get_stock_data(ticker, exchange=exchange, interval=Interval.in_daily, n_bars = nbars)
+        except Exception as e:
+            self.logger.error(e)
+            return None
+        return df
 
-    # Recorre la lista de tickers buscando la data para cada ticker
-    def get_stock_data(self, the_tickers_df, the_exchange, stopiter = 0):
+    # Recorre la lista de tickers buscando la data para cada ticker y acumulándola en el dataframe a retornar
+    def get_exchange_data(self, the_tickers_df, the_exchange, stopiter = 0):
         the_tickers_df.reset_index()
         myExchange = the_exchange
         numberBars = 3
@@ -162,7 +200,7 @@ class etk_finance:
     # Actualiza el excel con los títulos solicitados
     def update_excel(self, data_frame):
         print('Archivo file_path: ', self.file_path)
-        current_df = pd.read_excel(self.file_path, usecols='A:H', engine='openpyxl')
+        current_df = pd.read_excel(self.file_path, usecols='A:G', engine='openpyxl', header=0)
         print('CURRENT DATAFRAME:')
         print(current_df)
         print('NEW DATAFRAME:')

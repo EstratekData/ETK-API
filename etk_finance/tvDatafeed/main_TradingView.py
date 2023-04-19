@@ -6,7 +6,8 @@ import random
 import re
 import string
 import pandas as pd
-from websockets import create_connection
+import asyncio
+import websockets     # from websockets import create_connection
 import requests
 import json
 
@@ -81,11 +82,21 @@ class TvDatafeed:
 
         return token
 
+    async def __create_connection(self):
+        logging.debug("creating websocket connection")
+        self.ws = await websockets.connect(
+            "wss://data.tradingview.com/socket.io/websocket", extra_headers=self.__ws_headers, ping_timeout=self.__ws_timeout
+        )
+    
+    '''
+
     def __create_connection(self):
         logging.debug("creating websocket connection")
         self.ws = create_connection(
             "wss://data.tradingview.com/socket.io/websocket", headers=self.__ws_headers, timeout=self.__ws_timeout
         )
+    '''
+
 
     @staticmethod
     def __filter_raw_message(text):
@@ -124,7 +135,7 @@ class TvDatafeed:
     def __create_message(self, func, paramList):
         return self.__prepend_header(self.__construct_message(func, paramList))
 
-    def __send_message(self, func, args):
+    async def __send_message(self, func, args):
         m = self.__create_message(func, args)
         if self.ws_debug:
             print(m)
@@ -305,6 +316,7 @@ class TvDatafeed:
 
 # --- MAIN ---
 if __name__ == "__main__":
+    print('tvDataFeed: Executing main()...')
     logging.basicConfig(level=logging.DEBUG)
     tv = TvDatafeed()
     # print(tv.get_hist("CRUDEOIL", "MCX", fut_contract=1))
