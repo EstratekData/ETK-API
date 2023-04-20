@@ -7,7 +7,7 @@ import requests
 import numpy as np
 import logging
 from datetime import datetime
-
+from dateutil.relativedelta import relativedelta
 
 
 
@@ -42,6 +42,7 @@ from datetime import datetime
 class etk_finance:
 
     def __init__(self, file_name, base_dir=None, username = '', password = ''):
+        self.iterador = 0
         self.file_name = file_name
         self.base_dir = base_dir
         print(base_dir)
@@ -73,6 +74,12 @@ class etk_finance:
         end = datetime.strptime(end_date, '%Y-%m-%d')
         delta = end - start
         return delta.days
+
+    # Returns today's date in 'YYYY-MM-DD' format
+    def get_todays_date():
+        today = datetime.date.today()
+        return today.strftime('%Y-%m-%d')
+
 
     # Obtiene el valor de una variable de ambiente (OS) especificada
     def get_env_var(variable_name):
@@ -106,9 +113,7 @@ class etk_finance:
 
 
     def get_stock_data(self, ticker, exchange, interval, n_bars):
-        print()
         tv = TvDatafeed(self.username, self.password)
-        print(f'get_stock_data({self.username} --- {self.password})...')
         
         # get the current price of the stock
         try:
@@ -121,7 +126,6 @@ class etk_finance:
     # Retorna un dataframe con toda la infomraación del ticker y el exchange 
     # INFO: (symbol, open, close, high, low, volume)
     def get_current_stock_price(self, ticker, exchange):
-        print(f'get_current_stock_price({self.username} --- {self.password})...')
         # get the current price of the stock
         try:
             df = self.get_stock_data(ticker, exchange=exchange, interval=Interval.in_daily, n_bars = 1)
@@ -130,35 +134,38 @@ class etk_finance:
             return None
         return df
     
+ 
     # Retorna un dataframe con toda la infomraación del ticker y el exchange entre dos fechas
     # INFO: (symbol, open, close, high, low, volume)
     # FORMATOS DE start_date y end_date: 'YYYY-MM-DD'
     def get_stock_data_daily_interval(self, ticker, exchange, start_date, end_date ):
         nbars = self.days_between(start_date, end_date)
         tv = TvDatafeed(self.username, self.password)
-        print(f'get_stock_data({self.username} --- {self.password})...')
-        # start_date = pd.Timestamp('2023-01-01')
-        # end_date = pd.Timestamp('2023-04-19')
         
         # get the current price of the stock
         try:
-            df = self.get_stock_data(ticker, exchange=exchange, interval=Interval.in_daily, n_bars = nbars)
+            df = self.get_stock_data(ticker=ticker, exchange=exchange, interval=Interval.in_daily, n_bars = nbars)
         except Exception as e:
             self.logger.error(e)
             return None
         return df
 
     # Recorre la lista de tickers buscando la data para cada ticker y acumulándola en el dataframe a retornar
-    def get_exchange_data(self, the_tickers_df, the_exchange, stopiter = 0):
+    def get_exchange_data(self, the_tickers_df, the_exchange, start_date, end_date, stopiter = 0):
         the_tickers_df.reset_index()
         myExchange = the_exchange
-        numberBars = 3
-        data_results_df = pd.DataFrame([], columns=[ 'datetime' , 'symbol',  'open', 'high', 'low', 'close', 'volume'])
-        tv = TvDatafeed(self.username, self.password)
+        if start_date is None or end_date is None:
+            start_date = (datetime.date.today() - relativedelta(months=1)).strftime('%Y-%m-%d')   # usa la fecha de un mes anterior a hoy
+            end_date = self.get_todays_date()
+
+        # data_results_df = pd.DataFrame([], columns=[ 'datetime' , 'symbol',  'open', 'high', 'low', 'close', 'volume'])
+        # data_results_df = pd.DataFrame([])
         
         for index, row in the_tickers_df.iterrows():
+            self.iterador += 1
             myTicker = row['Ticker']
             myTickerName = row['Ticker Name']
+            print('Symbol: ', myTicker)
 
             # Depura lineas que vengan defectuosas
             # if len(myTicker) == 0: continue
@@ -167,49 +174,41 @@ class etk_finance:
             myTickerName = myTickerName.replace('\n','')
             myTickerName = myTickerName.replace('\r','')
 
-            # TODO: print (index, ' ', myTicker.ljust(7), ' ', myTickerName.ljust(70), '  ',  myExchange.ljust(8))  
-            df = tv.get_hist(
-                myTicker,
-                myExchange,
-                interval=Interval.in_daily,
-                n_bars=numberBars,
-                extended_session=False,
-            )
-
+            df = self.get_stock_data_daily_interval(myTicker, myExchange, start_date, end_date)
 
             if df is None:
                 print(f'Error con ticker: {myTicker}')
             else:
+                if index == 0: data_results_df = df       # La primera vez toma el primer df para acumular registros
                 print(myTicker, ':  ', len(df), ' entradas')
+                df = df.reset_index()
+                print(df['datetime'])
+                df['datetime'] = df['datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                # df['datetime2'] = df['datetime'].astype(str)
+                # df['datetime'].drop()
+                # df.rename(columns={"datetime2": "datetime"})
                 data_results_df = pd.concat([data_results_df, df], ignore_index=True, axis=0)
-          
             if stopiter > 0 and index == stopiter : break      # Limite de iteraciones para hacer pruebas
-            # end for
-            
-        print('\n\n')
-        print('Resultados a STOCK DATA.XLSX ---------------------------')
-        print(data_results_df)
+        # end for
 
-        # TODO: Hacer que no se borre el Excel anterior (buscar en Internet o GPT3)
-        the_tickers_df.to_excel("tickers.xlsx",
-            sheet_name=the_exchange)
-        data_results_df.to_excel("stock data.xlsx",
-            sheet_name=myExchange)
-        return index
+        return data_results_df
     
     # Actualiza el excel con los títulos solicitados
-    def update_excel(self, data_frame):
-        print('Archivo file_path: ', self.file_path)
-        current_df = pd.read_excel(self.file_path, usecols='A:G', engine='openpyxl', header=0)
-        print('CURRENT DATAFRAME:')
-        print(current_df)
-        print('NEW DATAFRAME:')
-        print(data_frame)
-
-        updated_df = pd.concat([current_df, data_frame], axis=0, ignore_index=True)      # agregar al final .drop_duplicates()
-        print('UPDATED DATAFRAME:')
-        print(updated_df)
-        updated_df.to_excel(self.file_path, index=False, sheet_name='DB', header=True, startrow=0)   # Antes: startrow=len(current_df)+1
+    def update_excel(self, df):
+        try:
+            if os.path.exists(self.file_path):
+                # If the file exists, append the data to it
+                existing_df = pd.read_excel(self.file_path)
+                updated_df = pd.concat([existing_df, df], ignore_index=True)
+                updated_df.to_excel(self.file_path, index=False)
+                print(f"Data appended to existing file at {self.file_path}")
+            else:
+                # If the file doesn't exist, create it and write the data to it
+                df.to_excel(self.file_path, index=False)
+                print(f"Data written to new file at {self.file_path}")
+        except Exception as e:
+            self.logger.error(e)      # self.logger.error(f'Error: {str(e)}')
+        
         
 # End of etk_finance class implementation        
 
