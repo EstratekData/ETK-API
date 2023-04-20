@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "ETK API Client",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/api_client.py",
+        "console": "integratedTerminal",
+        "args": ["etk_finance", "get_stock_currentprice", "AAPL", "NASDAQ"],
+        // "args": ["etk_webcheck", "https://www.google.com"],
+        // NOT YET: "args": ["etk_webcheck", "https://www.google.com", "https://estratekdata.com", "https://estrateklab.com", "https://prizr.com"],
+        // "args": ["etk_finance", "get_hist_prices", "AAPL", "NASDAQ", "-f", "prices.csv", "2020-01-01", "2021-01-01"],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/etk_finance:${workspaceFolder}/etk_date:${workspaceFolder}/etk_time:${workspaceFolder}/etk_date"
+        }
+      }
+    ]
+  }
