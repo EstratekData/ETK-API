@@ -131,6 +131,7 @@ class etk_finance:
             df = self.get_stock_data(ticker, exchange=exchange, interval=Interval.in_daily, n_bars = 1)
         except Exception as e:
             self.logger.error(e)
+            print('etk_finance - get_current_stock_price: Error')
             return None
         return df
     

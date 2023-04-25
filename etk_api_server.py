@@ -51,15 +51,16 @@ def get_stock_currentprice():
     exchange = request.args.get('exchange')
 
     # Call the etk_finance function with the query parameters
-    myData = etk_stock.etk_finance('output_plus.xlsx')
+    myData = etk_stock.etk_finance('output_plus.xlsx', username='oariasz', password='Megatrends1')
     
     # Get the symbol current stock price
     df_prices = myData.get_current_stock_price(symbol, exchange)
     print(df_prices)
+    print(30*'/')
     if df_prices is not None:
        print('Resultados')
        print(df_prices)
-    return jsonify(df_prices), 200
+    return str(df_prices.iloc[0]['close']), 200
 
 # Define the API endpoint for getting historical stock prices
 @etk_apiserver.route('/etk_finance/get_hist', methods=['GET'])
