@@ -121,48 +121,32 @@ class APIClient:
             self.parser.print_help()
 
 # API CALLS FUNCTIONS   ------------------------------------------------------------------
-
 # API etk_finance
+def  api_etk_finance_get_stock_currentprice(symbol, exchange):
+    myData = etk_finance('output_plus.xlsx', username='oariasz72', password='Megatrends1') 
+    print(f'GET CURRENT STOCK PRICE {symbol} / {exchange} ------------------')
+    df_prices = myData.get_current_stock_price(symbol, exchange)
+    if df_prices is not None:
+        print('Resultados')
+        print(df_prices)
 
-# Obtiene el precio mas reciente del symbol y exchange especificados
-def api_etk_finance_get_stock_currentprice(symbol, exchange):
-    params = {'symbol': symbol, 'exchange': exchange}
-    api_endpoint = api_url + '/etk_finance/get_stock_currentprice'
-    print ('api_client: symbol --> ', symbol)
-    print ('api_client: exchange --> ', exchange)
-    try:
-        response = requests.get(api_endpoint, params=params)
-        if response.status_code == 200:
-            current_price = response.json()
-            if current_price:
-                print(f'Current price of {symbol} on {exchange}: {current_price}')
-            else:
-                print(f"No data found for {symbol} on {exchange}.")
-        else:
-            print(f"Error occurred while fetching data for {symbol}: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data for {symbol}: {e}")
-
-# Obtiene una lista de precioes historicos para un symbol y un exchange, desde la fecha start_date, hasta end_date
 def api_etk_finance_get_hist_prices(symbol, exchange, start_date, end_date):
-    params = {'symbol': symbol, 'exchange': exchange, 'start_date': start_date, 'end_date': end_date}
-    try:
-        response = requests.get(api_url, params=params)
-        if response.status_code == 200:
-            df_prices = response.json()
-            if df_prices:
-                print(f'Stock {symbol} prices from {start_date} to {end_date}')
-                print(df_prices)
-            else:
-                print(f"No data found for {symbol} on {exchange} between {start_date} and {end_date}.")
-        else:
-            print(f"Error occurred while fetching data for {symbol}: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data for {symbol}: {e}")
+    print(f'GET DAILY STOCK PRICE OF Apr-2023 {symbol} / {exchange} ------------------')
+    myData = etk_finance('output_plus.xlsx', username='oariasz72', password='Megatrends1') 
+    if start_date == None:
+        print('api_client: start_date not specified')
+        return
+    if end_date == None:
+        end_date = myData.get_todays_date
 
-# Obtiene la lista de simbolos o tickers del exchange especificado
+    df_prices = myData.get_stock_data_daily_interval(symbol, exchange, start_date, end_date)
+    if df_prices is not None:
+        print(f'Stock {symbol} prices from {start_date} to {end_date}')
+        print(df_prices)    
+
 def  api_etk_finance_get_tickers(exchange):
     # Set the query parameters
+    print('API Client: ', exchange)
     params = {
         'exchange': exchange,
     }
@@ -181,54 +165,41 @@ def  api_etk_finance_get_tickers(exchange):
             print(tickers)
         else:
             # Handle the error
-            print(f'ETK_Client: Request failed with status code {response.status_code}')
+            print(f'*** Request failed with status code {response.status_code}')
 
     except requests.exceptions.HTTPError as http_err:
-        print(f'ETK_Client:  HTTP error occurred: {http_err}')
+        print(f'*** HTTP error occurred: {http_err}')
     except Exception as err:
-        print(f'ETK_Client: Other error occurred: {err}')
-
-# API api_webcheck
-
-# Imprime OK si la pagina web tiene acceso sin problemas, de otra forma retorna el error del request
-def api_webcheck(url):
-    # Set the query parameters
-    params = {
-        'url': url
-    }
+        print(f'*** Other error occurred: {err}')
     
-    try:
-        response = requests.get(api_url, params={'url': url})
-        status_code = response.status_code
-        if status_code == 200:
-            print(f"ETK_Client: {url} is OK")
-        elif status_code == 404:
-            print(f"ETK_Client: {url} not found")
-        else:
-            print(f"ETK_Client: {url} returned status code {status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"ETK_Client: An error occurred while checking {url}: {e}")
+    
+    
 
-# Imprime OK en cada elemento de la lista de urls proporcionada si tiene acceso sin problemas, 
-# de otra forma retorna el error del request para cada item
+
+
+# API etk_webcheck
+def api_webcheck(url):
+    web_check = WebCheck()
+    result = web_check.check_url(url)
+    status_code = result[1]
+    if status_code == WebCheck.HTTP_OK:
+        print(f"{url} is OK")
+    elif status_code == WebCheck.HTTP_NOT_FOUND:
+        print(f"{url} not found")
+    else:
+        print(f"{url} returned status code {status_code}")
+
 def api_webcheck_list(url_list):
-    # Set the query parameters
-    params = {
-        'urls': url_list
-    }
-        
-    try:
-        response = requests.post(api_url, json={'urls': url_list})
-        results = response.json()
-        for url, status_code in results.items():
-            if status_code == 200:
-                print(f"ETK_Client: {url} is OK")
-            elif status_code == 404:
-                print(f"ETK_Client: {url} not found")
-            else:
-                print(f"ETK_Client: {url} returned status code {status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while checking URLs: {e}")
+    web_check = WebCheck()
+    web_check.add_url(url_list)
+    results = web_check.check_urls()
+    for url, status_code in results:
+        if status_code == WebCheck.HTTP_OK:
+            print(f"{url} is OK")
+        elif status_code == WebCheck.HTTP_NOT_FOUND:
+            print(f"{url} not found")
+        else:
+            print(f"{url} returned status code {status_code}")
 
 
 # -------------------------

@@ -1,0 +1,2 @@
+export PYTHONPATH="./etk_finance:./etk_date:./etk_time:./etk_date"
+source ./env/bin/activate
