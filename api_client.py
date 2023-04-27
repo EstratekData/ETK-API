@@ -4,12 +4,14 @@ import sys
 import requests
 import pandas as pd
 import argparse
-from etk_finance.etk_stock import etk_finance
-from etk_webcheck.etk_webcheck import WebCheck
+from etk_finance import etk_stock
+from etk_webcheck import WebCheck
 
 
 
 api_url = 'http://localhost:5000'
+
+api_url = 'http://estrateklab.com:5000'
 
 
 
@@ -21,39 +23,40 @@ class APIClient:
     # Method: __init__(self)   ---------------------------------------------------
     # Constructor in charge of parsing the command line arguments of api_client.py
     def __init__(self):
-        # Create an argument parser with a help message
-        self.parser = argparse.ArgumentParser(description='API client', 
-                                              usage='python api_client.py <command> [<args>]')
-        # Add arguments for the API commands and their sub-commands
+        # Crear un analizador de argumentos con un mensaje de ayuda
+        self.parser = argparse.ArgumentParser(description='Cliente de API',
+                                            usage='python api_client.py <comando> [<args>]')
+        # Agregar argumentos para los comandos de la API y sus subcomandos
         subparsers = self.parser.add_subparsers(dest='api_command')
 
-        # etk_finance command and its sub-commands
-        etk_finance_parser = subparsers.add_parser('etk_finance', help='ETK Finance API')
+        # Comando etk_finance y sus subcomandos
+        etk_finance_parser = subparsers.add_parser('etk_finance', help='API de ETK Finance')
         etk_finance_subparsers = etk_finance_parser.add_subparsers(dest='sub_command')
 
-        get_stock_currentprice_parser = etk_finance_subparsers.add_parser('get_stock_currentprice', 
-                                                                         help='Get current stock price')
-        get_stock_currentprice_parser.add_argument('symbol', help='The stock symbol')
-        get_stock_currentprice_parser.add_argument('exchange', help='The stock exchange')
+        get_stock_currentprice_parser = etk_finance_subparsers.add_parser('get_stock_currentprice',
+                                                                        help='Obtener el precio actual de las acciones')
+        get_stock_currentprice_parser.add_argument('symbol', help='El símbolo de la acción')
+        get_stock_currentprice_parser.add_argument('exchange', help='El intercambio de acciones')
 
-        get_hist_prices_parser = etk_finance_subparsers.add_parser('get_hist_prices', 
-                                                                   help='Get historical stock prices')
-        get_hist_prices_parser.add_argument('symbol', help='The stock symbol')
-        get_hist_prices_parser.add_argument('exchange', help='The stock exchange')
-        get_hist_prices_parser.add_argument('-f', '--filename', help='The filename to which the data will be saved. If not specified, the data will be printed to the console.')
-        get_hist_prices_parser.add_argument('-add', action='store_true', help='If specified, the data will be appended to the file instead of overwriting it.')
-        get_hist_prices_parser.add_argument('-new', action='store_true', help='If specified, a new file will be created instead of overwriting an existing file.')
-        get_hist_prices_parser.add_argument('start_date', help='The start date (YYYY-MM-DD)')
-        get_hist_prices_parser.add_argument('end_date', help='The end date (YYYY-MM-DD)')
+        get_hist_prices_parser = etk_finance_subparsers.add_parser('get_hist_prices',
+                                                                help='Obtener precios históricos de acciones')
+        get_hist_prices_parser.add_argument('symbol', help='El símbolo de la acción')
+        get_hist_prices_parser.add_argument('exchange', help='El intercambio de acciones')
+        get_hist_prices_parser.add_argument('-f', '--filename', help='El nombre de archivo al que se guardarán los datos. Si no se especifica, los datos se imprimirán en la consola.')
+        get_hist_prices_parser.add_argument('-add', action='store_true', help='Si se especifica, los datos se agregarán al archivo en lugar de sobrescribirlo.')
+        get_hist_prices_parser.add_argument('-new', action='store_true', help='Si se especifica, se creará un nuevo archivo en lugar de sobrescribir un archivo existente.')
+        get_hist_prices_parser.add_argument('start_date', help='La fecha de inicio (AAAA-MM-DD)')
+        get_hist_prices_parser.add_argument('end_date', help='La fecha de finalización (AAAA-MM-DD)')
 
-        get_ticker_list_parser = etk_finance_subparsers.add_parser('get_ticker_list', 
-                                                                   help='Get list of tickers')
-        get_ticker_list_parser.add_argument('-f', '--output_filename', help='The output filename to which the tickers will be saved. If not specified, the tickers will be printed to the console.')
-        get_ticker_list_parser.add_argument('exchange', help='The stock exchange')
-        
-        # webcheck command
-        webcheck_parser = subparsers.add_parser('etk_webcheck', help='Web check API')
-        webcheck_parser.add_argument('url', help='The URL to check')
+        get_ticker_list_parser = etk_finance_subparsers.add_parser('get_ticker_list',
+                                                                help='Obtener la lista de símbolos')
+        get_ticker_list_parser.add_argument('-f', '--output_filename', help='El nombre de archivo de salida al que se guardarán los símbolos. Si no se especifica, los símbolos se imprimirán en la consola.')
+        get_ticker_list_parser.add_argument('exchange', help='El intercambio de acciones')
+
+        # Comando webcheck
+        webcheck_parser = subparsers.add_parser('etk_webcheck', help='API de comprobación web')
+        webcheck_parser.add_argument('url', help='La URL a comprobar')
+
                         
     # Method: dispatcher(self, args)   ------------------------------------
     # Method to execute the API calls depending on the parsed args provided
@@ -85,36 +88,34 @@ class APIClient:
 
         # Make API calls using the extracted arguments
         if api_command == 'etk_finance':
-            print('ETK_FINANCEEEEEEEEEEEEEEEE')
             if sub_command == 'get_stock_currentprice':                                     # <--- get_stock_currentprice
                 # Make API call to get the current stock price using symbol and exchange
-                print(f"Getting current price for {symbol} on {exchange}...")
+                print(f"El precio actual de {symbol} en {exchange} es:")
                 api_etk_finance_get_stock_currentprice(symbol, exchange)
 
             elif sub_command == 'get_hist_prices':                                          # <--- get_hist_prices
                 # Make API call to get historical stock prices using symbol, exchange, filename, add_to_file, new_file, start_date, and end_date
-                print(f"Getting historical prices for {symbol} on {exchange} between {start_date} and {end_date}...")
+                print(f"Obteniendo precios históricos para {symbol} en {exchange} entre {start_date} y {end_date}...")
                 api_etk_finance_get_hist_prices(symbol, exchange, start_date, end_date)
                 if filename:
-                    print(f"Data will be saved to {filename}")
+                    print(f"La data será guardada en el archivo {filename}")
             elif sub_command == 'get_ticker_list':                                          # <--- get_ticker_list
-                print('Holaaaaaaaaaaa')
                 exchange = args.exchange
                 # Make API call to get the list of tickers using output_filename
-                print(f"Getting ticker list, output will be saved to {output_filename if output_filename else 'console'}")
+                print(f"Obteniendo lista de símbolos, el resultado será guardado en {output_filename if output_filename else 'console'}")
                 api_etk_finance_get_tickers(exchange)
             else:
                 # Print help message if the sub-command is not recognized
-                print(f'api_client: etk_finance subcommand {sub_command} not recognized.')
+                print(f'API Clientt: etk_finance subcommand {sub_command} not recognized.')
                 # etk_finance_parser.print_help()
         elif api_command == 'etk_webcheck':
             # Make API call to check the URL using url
             arg_list = sys.argv[1:]
             if len(arg_list) <= 3:
-                print(f"Checking URL: {url}...")
+                print(f"Chequeando URL: {url}...")
                 api_webcheck(url)
             else:
-                print(f"Checking URL: {url}...")
+                print(f"Chequeando URL: {url}...")
                 api_webcheck_list(arg_list[1:])
         else:
             # Print help message if the command is not recognized
@@ -135,33 +136,37 @@ def api_etk_finance_get_stock_currentprice(symbol, exchange):
         if response.status_code == 200:
             current_price = response.json()
             if current_price:
-                print(f'Current price of {symbol} on {exchange}: {current_price}')
+                print(f'Precio actual de {symbol} en {exchange}: {current_price}')
             else:
-                print(f"No data found for {symbol} on {exchange}.")
+                print(f"No hay data para {symbol} en {exchange}.")
         else:
-            print(f"Error occurred while fetching data for {symbol}: {response.status_code}")
+            print(f"Un error ocurrió para {symbol}: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data for {symbol}: {e}")
+        print(f"Ha ocurrido un error intentando conectarse al servidor para {symbol}: {e}")
 
 # Obtiene una lista de precioes historicos para un symbol y un exchange, desde la fecha start_date, hasta end_date
 def api_etk_finance_get_hist_prices(symbol, exchange, start_date, end_date):
     params = {'symbol': symbol, 'exchange': exchange, 'start_date': start_date, 'end_date': end_date}
+    api_endpoint = api_url + '/etk_finance/get_hist_prices'
+    
     try:
-        response = requests.get(api_url, params=params)
+        response = requests.get(api_endpoint, params=params)
         if response.status_code == 200:
-            df_prices = response.json()
-            if df_prices:
-                print(f'Stock {symbol} prices from {start_date} to {end_date}')
+            df_prices = pd.read_json(response.text)
+            if len(df_prices) > 0:
+                print(f'\nPrecios históricos para: {symbol} desde: {start_date} hasta: {end_date}')
+                print ('--------------------------------------------------------------------------------')
                 print(df_prices)
             else:
-                print(f"No data found for {symbol} on {exchange} between {start_date} and {end_date}.")
+                print(f"No se encontró data para {symbol} en {exchange} entre {start_date} y {end_date}.")
         else:
-            print(f"Error occurred while fetching data for {symbol}: {response.status_code}")
+            print(f"Un error ocurrión para {symbol}: {response.status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data for {symbol}: {e}")
+        print(f"Ha ocurrido un error intentando conectarse al servidor para {symbol}: {e}")
 
 # Obtiene la lista de simbolos o tickers del exchange especificado
 def  api_etk_finance_get_tickers(exchange):
+    api_endpoint = api_url + '/etk_finance/get_tickers'
     # Set the query parameters
     params = {
         'exchange': exchange,
@@ -170,23 +175,24 @@ def  api_etk_finance_get_tickers(exchange):
     # Make a GET request to the /etk_finance endpoint with the query parameters
     try:
     # Make a GET request to the /etk_finance endpoint with the query parameters
-        response = requests.get(f'{api_url}/etk_finance', params=params)
+        response = requests.get(api_endpoint, params=params)
 
         # response.raise_for_status()
         if response.status_code == 200:
-            print(f'SYMBOL LIST FOR {exchange}')
+            print(f'LISTA DE SÍMBOLOS PARA EL EXCHANGE: {exchange}')
+            print ('----------------------------------')
             # Extract the response data in JSON format
             tickers = response.json()
             # Print the response data
             print(tickers)
         else:
             # Handle the error
-            print(f'ETK_Client: Request failed with status code {response.status_code}')
+            print(f'ETK_Client: Request ha fallado con código de error:  {response.status_code}')
 
     except requests.exceptions.HTTPError as http_err:
-        print(f'ETK_Client:  HTTP error occurred: {http_err}')
+        print(f'ETK_Client:  Error de HTTP: {http_err}')
     except Exception as err:
-        print(f'ETK_Client: Other error occurred: {err}')
+        print(f'ETK_Client: Otro tipo de error ha ocurrido (chequear servidor API): {err}')
 
 # API api_webcheck
 
@@ -201,13 +207,13 @@ def api_webcheck(url):
         response = requests.get(api_url, params={'url': url})
         status_code = response.status_code
         if status_code == 200:
-            print(f"ETK_Client: {url} is OK")
+            print(f"ETK_Client: {url} está OK")
         elif status_code == 404:
-            print(f"ETK_Client: {url} not found")
+            print(f"ETK_Client: {url} no encontrado")
         else:
-            print(f"ETK_Client: {url} returned status code {status_code}")
+            print(f"ETK_Client: {url} retornó el siguiente código de error {status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"ETK_Client: An error occurred while checking {url}: {e}")
+        print(f"ETK_Client: Ocurrió un error chequeando el website {url}: {e}")
 
 # Imprime OK en cada elemento de la lista de urls proporcionada si tiene acceso sin problemas, 
 # de otra forma retorna el error del request para cada item
@@ -222,13 +228,13 @@ def api_webcheck_list(url_list):
         results = response.json()
         for url, status_code in results.items():
             if status_code == 200:
-                print(f"ETK_Client: {url} is OK")
+                print(f"ETK_Client: {url} está OK")
             elif status_code == 404:
-                print(f"ETK_Client: {url} not found")
+                print(f"ETK_Client: {url} no encontrado")
             else:
-                print(f"ETK_Client: {url} returned status code {status_code}")
+                print(f"ETK_Client: {url} retornó el siguiente código de error  {status_code}")
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred while checking URLs: {e}")
+        print(f"ETK_Client: Ocurrió un error chequeando los URLs: {e}")
 
 
 # -------------------------

@@ -1,2 +1,13 @@
-export PYTHONPATH="./etk_finance:./etk_date:./etk_time:./etk_date"
+# Set the path for the Estratek API Server sources
+export API_SERVER_PATH=/var/www/vhosts/estrateklab.com/httpdocs/python/etk_api
+
+# Set the path for each imported module. Just add a line.
+export PYTHONPATH="./etk_finance"
+export PYTHONPATH="$PYTHONPATH:./etk_date"
+export PYTHONPATH="$PYTHONPATH:./etk_time"
+export PYTHONPATH="$PYTHONPATH:./etk_date"
+export PYTHONPATH="$PYTHONPATH:./etk_webcheck"
+
+# Activates the Python environment in ./env
 source ./env/bin/activate
+

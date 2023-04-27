@@ -104,6 +104,7 @@ class etk_finance:
         
         # Split the ticker lists from the full CSV string into lines        
         the_tickers = requests.get(the_url).text
+        print(the_tickers)
         the_tickers = the_tickers.split("\n")
         the_tickers = [t for t in the_tickers if t] # Remove empty lines
         
